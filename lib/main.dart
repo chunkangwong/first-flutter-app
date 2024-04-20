@@ -29,8 +29,12 @@ class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
   var history = <WordPair>[];
 
+  GlobalKey? historyListKey;
+
   void getNext() {
     history.insert(0, current);
+    var animatedList = historyListKey?.currentState as AnimatedListState?;
+    animatedList?.insertItem(0);
     current = WordPair.random();
     notifyListeners();
   }
@@ -141,24 +145,36 @@ class HistoryListView extends StatefulWidget {
 }
 
 class _HistoryListViewState extends State<HistoryListView> {
+  final _key = GlobalKey();
+
   @override
   build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var history = appState.history;
-    var favourites = appState.favourites;
-    return ListView(
-      children: [
-        for (var pair in history)
-          ListTile(
-            leading: favourites.contains(pair)
-                ? Icon(Icons.favorite, size: 12)
-                : SizedBox(),
-            title: Text(
-              pair.asLowerCase,
-              semanticsLabel: pair.asPascalCase,
-            ),
-          )
-      ],
+    appState.historyListKey = _key;
+
+    return AnimatedList(
+      key: _key,
+      reverse: true,
+      padding: EdgeInsets.only(top: 100),
+      initialItemCount: appState.history.length,
+      itemBuilder: (context, index, animation) {
+        final pair = appState.history[index];
+        return SizeTransition(
+            sizeFactor: animation,
+            child: Center(
+                child: TextButton.icon(
+              onPressed: () {
+                appState.toggleFavourite();
+              },
+              label: Text(
+                pair.asLowerCase,
+                semanticsLabel: pair.asPascalCase,
+              ),
+              icon: appState.favourites.contains(pair)
+                  ? Icon(Icons.favorite, size: 12)
+                  : SizedBox(),
+            )));
+      },
     );
   }
 }
