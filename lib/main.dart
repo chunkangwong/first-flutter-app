@@ -267,6 +267,7 @@ class GeneratorPage extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 10),
         ],
       ),
     );
